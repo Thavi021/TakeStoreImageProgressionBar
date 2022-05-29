@@ -1,0 +1,127 @@
+package com.example.opscgroupnodb;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.os.Handler;
+import android.provider.MediaStore;
+import android.view.View;
+//import android.widget.EditText;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
+public class Profile extends AppCompatActivity {
+
+
+    //private EditText Email;
+    //private EditText Password;
+
+    private ProgressBar mProgressBar;
+    private TextView mLoadingText;
+
+    private Integer UserID;
+
+    private int mProgressStatus = 0;
+
+    private Handler mHandler = new Handler();
+
+
+    //IMG Declarations
+    private Button fabPhoto;
+    private ImageView imgCameraImage;
+    private static final int REQUEST_IMAGE_CAPTURE=0;
+    private static final int REQUEST_IMAGE_CAPTURE_PERMISSION=100;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_profile);
+
+
+
+        fabPhoto=findViewById(R.id.TakeImageButton);
+        imgCameraImage=findViewById(R.id.imgCameraImage);
+
+        fabPhoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //check if we have permission
+                if(ActivityCompat.checkSelfPermission(Profile.this, Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED){
+                    final String[] permissions={Manifest.permission.CAMERA};
+                    //request permission -this is asynchronous
+                    ActivityCompat.requestPermissions(Profile.this,permissions,REQUEST_IMAGE_CAPTURE_PERMISSION);
+                }
+                else
+                {
+                    takePhoto();
+                }
+                 Intent i=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                 startActivityForResult(i,REQUEST_IMAGE_CAPTURE);
+            }
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
+        mLoadingText = (TextView) findViewById(R.id.LoadingCompleteTextView);
+
+
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (mProgressStatus < 100){
+                    mProgressStatus++;
+                    android.os.SystemClock.sleep(50);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mProgressBar.setProgress(mProgressStatus);
+                        }
+                    });
+                }
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mLoadingText.setVisibility(View.VISIBLE);
+                    }
+                });
+            }
+        }).start();
+    }
+
+
+    public void takePhoto(){
+        Intent i=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(i,REQUEST_IMAGE_CAPTURE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==REQUEST_IMAGE_CAPTURE && data!=null){
+            Bitmap bitmap=(Bitmap)data.getExtras().get("data");
+            imgCameraImage.setImageBitmap(bitmap);
+        }
+    }
+
+}
